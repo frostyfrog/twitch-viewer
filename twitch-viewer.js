@@ -4,6 +4,37 @@ var CommandLog = new Meteor.Collection("commandlog");
 var Ad = new Meteor.Collection("ad");
 
 if (Meteor.isClient) {
+
+	function vnc_resize(rfb, width, height) {
+
+		if(typeof width != 'undefined' && typeof height != 'undefined')
+			rfb.get_display().resize(width, height)
+		if(rfb === undefined)
+			rfb = NoVnc.rfb
+		var scale = 1;
+		var esize = {
+			width: document.getElementById("vnc").offsetWidth,
+			height: document.getElementById("vnc").offsetHeight
+		}
+		var ssize = {
+			width: rfb._fb_width,
+			height: rfb._fb_height,
+			real_width: rfb._fb_width * rfb.get_display().get_scale(),
+			real_height: rfb._fb_height * rfb.get_display().get_scale()
+		}
+		if(esize.width - ssize.width <= esize.height - ssize.height && ssize.height * esize.width/ssize.width < esize.height) {
+			scale = esize.width / ssize.width
+		}
+		else {
+			scale = esize.height / ssize.height
+		}
+		if (scale > 1) scale = 1.0;
+		rfb.get_display().set_scale(scale)
+		rfb.get_mouse().set_scale(scale)
+		NoVnc.size.set({width: ssize.width * scale, height: ssize.height * scale})
+	}
+	NoVnc.rfb.set_onFBResize(vnc_resize)
+	window.addEventListener("resize", vnc_resize)
 	
 	Session.set("cpu", []);
 	
